@@ -1,17 +1,23 @@
 import json
 import os
-import requests
+#import requests
 from openpyxl import load_workbook
 
 
 
-tfstate_url = 'https://objectstorage.eu-paris-1.oraclecloud.com/p/TQrjTNXk11Xhp_9tp27I2DWLGbFwKlEB5FFZiu8x_asnOXl8yt-ssCJH5Z0VpGpO/n/axikvfj5offl/b/bucket-demo-tfstate/o/iam-tfstate/terraform.tfstate'
-response = requests.get(tfstate_url)
-response.raise_for_status()  
-tfstate_data = response.json()
+    
+#tfstate_url = 'https://objectstorage.eu-paris-1.oraclecloud.com/p/TQrjTNXk11Xhp_9tp27I2DWLGbFwKlEB5FFZiu8x_asnOXl8yt-ssCJH5Z0VpGpO/n/axikvfj5offl/b/bucket-demo-tfstate/o/iam-tfstate/terraform.tfstate'
+#response = requests.get(tfstate_url)
+#response.raise_for_status()  
+#tfstate_data = response.json()
 
 
 parent_dir = os.path.dirname(os.path.abspath(__file__))
+tfstate_iam_path = os.path.join(parent_dir, 'terraform.tfstate')
+
+with open(tfstate_iam_path, "r") as file:
+    tfstate_data = json.load(file)
+
 excel_file_path = os.path.join(parent_dir, 'OCI.xlsx')
 wb = load_workbook(excel_file_path)
 
