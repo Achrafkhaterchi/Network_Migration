@@ -23,7 +23,7 @@ pipeline {
                 archiveArtifacts 'Network/VNets/variables.tfvars'
             }
         }
-/*
+
         stage('Retrieve main.tf from Shared Location') {
             steps {
                 sh 'cp /home/shared_files/VNets/main.tf Network/VNets/main.tf'
@@ -38,8 +38,8 @@ pipeline {
                 sh 'rm /home/shared_files/VNets/main.tf'
             }
         }
-*/
 
+/*
         stage('Retrieve main.tf from Shared Location') {
             steps {
                 script {
@@ -64,7 +64,7 @@ pipeline {
                 }
             }
         }
-
+*/
         stage('Terraform Init') {
             steps {
                 dir('Network/VNets/') {
