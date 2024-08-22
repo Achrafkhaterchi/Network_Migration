@@ -1,0 +1,79 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Run IAM Pipeline') {
+            steps {
+                script {
+                    def iamResult = build job: 'IAM', wait: true
+                    println "IAM Pipeline result: ${iamResult.result}"
+
+                    if (iamResult.result != 'SUCCESS') {
+                        error('IAM Pipeline failed')
+                    }
+                }
+            }
+        }
+
+        stage('Run Storage Pipeline') {
+            steps {
+                script {
+                    def storageResult = build job: 'Storage', wait: true
+                    println "Storage Pipeline result: ${storageResult.result}"
+
+                    if (storageResult.result != 'SUCCESS') {
+                        error('Storage Pipeline failed')
+                    }
+                }
+            }
+        }
+
+        stage('Run VNets Pipeline') {
+            steps {
+                script {
+                    def vnetsResult = build job: 'VNets', wait: true
+                    println "VNets Pipeline result: ${vnetsResult.result}"
+
+                    if (vnetsResult.result != 'SUCCESS') {
+                        error('VNets Pipeline failed')
+                    }
+                }
+            }
+        }
+
+        stage('Run Routing Pipeline') {
+            steps {
+                script {
+                    def routingResult = build job: 'Routing', wait: true
+                    println "Routing Pipeline result: ${routingResult.result}"
+
+                    if (routingResult.result != 'SUCCESS') {
+                        error('Routing Pipeline failed')
+                    }
+                }
+            }
+        }
+
+        stage('Run Security Pipeline') {
+            steps {
+                script {
+                    def securityResult = build job: 'Security', wait: true
+                    println "Security Pipeline result: ${securityResult.result}"
+
+                    if (securityResult.result != 'SUCCESS') {
+                        error('Security Pipeline failed')
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Storage, VNets, Routing and Security modules have been successfully transferred from OCI to Azure!'
+        }
+        failure {
+            echo 'One of the pipelines failed. Check the logs for more details.'
+        }
+    }
+}

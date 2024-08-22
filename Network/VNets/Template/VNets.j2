@@ -1,0 +1,26 @@
+resource_group_name = "{{ resource_group }}"
+location = "{{ region }}"
+
+vnets = {
+{% for vcn_name, vcn in vnets.items() %}
+  {{ vcn_name }} = {
+    address_space = {{ vcn.address_space | tojson }}
+  }
+{% endfor %}
+}
+
+GatewaySubnet = {
+  vnet_name = "{{ GatewaySubnet.vnet_name }}"
+  address_prefixes = [{{ GatewaySubnet.address_prefixes | tojson }}]
+}
+
+
+subnets = {
+{% for subnet in subnets %}
+  {{ subnet.subnet_name }} = {
+    vnet_name       = "{{ subnet.vcn_name }}"
+    address_prefixes = ["{{ subnet.subnet_cidr }}"]
+  }{% if not loop.last %}{% endif %}
+{% endfor %}
+}
+

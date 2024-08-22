@@ -1,0 +1,39 @@
+resource_group_name = "{{ resource_group }}"
+location = "{{ region }}"
+
+peerings = [
+{% for spoke_vcn in spoke_vcns %}
+  {
+    hub = "{{ hub_vcn_name }}"
+    spoke = "{{ spoke_vcn }}"
+  }{% if not loop.last %},{% endif %}
+{% endfor %}
+]
+
+route_tables = {
+{% for table_name, routes in route_tables.items() %}
+  {{ table_name }} = {
+    routes = [
+    {% for route in routes %}
+      {
+        name           = "{{ route.name }}"
+        address_prefix = "{{ route.address_prefix }}"
+        next_hop_type  = "{{ route.next_hop_type }}"
+      }{% if not loop.last %},{% endif %}
+    {% endfor %}
+    ]
+  }{% if not loop.last %},{% endif %}
+{% endfor %}
+}
+
+route_table_associations = [
+{% for assoc in route_table_associations %}
+  {
+    subnet = "{{ assoc.subnet }}"
+    route_table = "{{ assoc.route_table }}"
+  }{% if not loop.last %},{% endif %}
+{% endfor %}
+]
+
+
+

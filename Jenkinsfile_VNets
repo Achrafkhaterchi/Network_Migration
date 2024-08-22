@@ -1,0 +1,106 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Exporting from OCI') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Achrafkhaterchi/Network_Migration.git'
+
+                sh 'python3 Backend/Network_Export.py Backend/OCI.xlsx Backend/network-tfstate_terraform.tfstate'
+
+                archiveArtifacts 'Backend/OCI.xlsx'
+            }
+        }
+
+        stage('TFVARS') {
+            steps {
+                stash(name: 'ociArtifact', includes: 'Backend/OCI.xlsx')
+                script {
+                    unstash 'ociArtifact'
+
+                    sh 'python3 Backend/VNets_Create.py Network/VNets/Template/VNets.j2 New_Subnet.py Backend/OCI.xlsx'
+                }
+                archiveArtifacts 'Network/VNets/variables.tfvars'
+            }
+        }
+/*
+        stage('Retrieve main.tf from Shared Location') {
+            steps {
+                sh 'cp /home/shared_files/VNets/main.tf Network/VNets/main.tf'
+                script {
+                    if (fileExists('Network/VNets/main.tf')) {
+                        echo 'Network/VNets/main.tf exists after copy.'
+                        sh 'cat Network/VNets/main.tf'
+                    } else {
+                        error('Network/VNets/main.tf does not exist after copy.')
+                    }
+                }
+                sh 'rm /home/shared_files/VNets/main.tf'
+            }
+        }
+*/
+
+        stage('Retrieve main.tf from Shared Location') {
+            steps {
+                script {
+                    def sharedFilePath = '/home/shared_files/VNets/main.tf'
+                    def targetDir = 'Network/VNets'
+                    def targetFilePath = "${targetDir}/main.tf"
+
+                    sh "mkdir -p ${targetDir}"
+
+                    sh "cp ${sharedFilePath} ${targetFilePath}"
+
+                    if (fileExists(targetFilePath)) {
+                        echo "${targetFilePath} exists after copy."
+                        sh "cat ${targetFilePath}"
+                    } else {
+                        error("${targetFilePath} does not exist after copy.")
+                    }
+
+                    sh "rm ${sharedFilePath}"
+
+                    sh "rm -rf ${targetDir}"
+                }
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                dir('Network/VNets/') {
+                    sh 'echo "yes" | terraform init -reconfigure'
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                dir('Network/VNets/') {
+                    sh 'terraform plan -var-file=variables.tfvars -out tfplan'
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                dir('Network/VNets/') {
+                    sh 'terraform apply -auto-approve tfplan'
+                }
+            }
+        }
+
+        /*stage('Terraform Destroy') {
+            steps {
+                dir('Network/VNets/') {
+                    sh 'terraform destroy -auto-approve -var-file=variables.tfvars'
+                }
+            }
+        }*/
+    }
+
+    post {
+        success {
+            echo 'VNets module has successfully transferred from OCI to Azure!'
+        }
+    }
+}

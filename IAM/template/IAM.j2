@@ -1,0 +1,20 @@
+location = "{{ location }}"
+compartments = [
+  {% for compartment in compartments %}
+  {
+    name        = "{{ compartment.name }}"
+    description = "{{ compartment.description }}"
+    location    = "{{ compartment.location }}"
+  }{% if not loop.last %},{% endif %}
+  {% endfor %}
+]
+
+group_config = [
+  {% for group in group_config %}
+  {
+    name        = "{{ group.name }}"
+    description = "{{ group.description }}"
+    members     = [{% for member in group.members %}"{{ member }}"{% if not loop.last %},{% endif %}{% endfor %}]
+  }{% if not loop.last %},{% endif %}
+  {% endfor %}
+]

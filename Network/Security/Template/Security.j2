@@ -1,0 +1,34 @@
+resource_group_name = "{{ resource_group }}"
+location            = "{{ region }}"
+
+network_security_groups = {
+{% for nsg_name, security_rules in network_security_groups.items() %}
+  {{ nsg_name }} = {
+    security_rules = [
+    {% for rule in security_rules %}
+      {
+        name                       = "{{ rule.name }}"
+        priority                   = {{ rule.priority }}
+        direction                  = "{{ rule.direction }}"
+        access                     = "{{ rule.access }}"
+        protocol                   = "{{ rule.protocol }}"
+        source_port_range          = "{{ rule.source_port_range }}"
+        destination_port_range     = "{{ rule.destination_port_range }}"
+        source_address_prefix      = "{{ rule.source_address_prefix }}"
+        destination_address_prefix = "{{ rule.destination_address_prefix }}"
+      }{% if not loop.last %},{% endif %}
+    {% endfor %}
+    ]
+  }{% if not loop.last %},{% endif %}
+{% endfor %}
+}
+
+subnet_nsg_associations = [
+  {% for association in subnet_nsg_associations %}
+  {
+    subnet = "{{ association.subnet_name }}"
+    nsg    = "{{ association.security_list_name }}"
+  }{% if not loop.last %},{% endif %}
+  {% endfor %}
+]
+

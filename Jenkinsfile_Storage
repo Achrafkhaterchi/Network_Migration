@@ -1,0 +1,66 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Storage Configuration') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Achrafkhaterchi/Network_Migration.git'
+
+                sh 'python3 Backend/Remote_State.py'
+            }
+        }
+
+        stage('Archive TF files') {
+            steps {
+                archiveArtifacts 'Network/Storage/main.tf'
+            }
+        }
+
+        stage('Copy main.tf VNets to Shared Location') {
+            steps {
+                sh 'cp Network/VNets/main.tf /home/shared_files/VNets/main.tf'
+            }
+        }
+        stage('Copy main.tf Routing to Shared Location') {
+            steps {
+                sh 'cp Network/Routing/main.tf /home/shared_files/Routing/main.tf'
+            }
+        }
+
+        stage('Copy main.tf Security to Shared Location') {
+            steps {
+                sh 'cp Network/Security/main.tf /home/shared_files/Security/main.tf'
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                dir('Network/Storage') {
+                    sh 'terraform init'
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                dir('Network/Storage') {
+                    sh 'terraform plan -out=tfplan'
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                dir('Network/Storage') {
+                    sh 'terraform apply -auto-approve tfplan'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Storage module has been successfully processed!'
+        }
+    }
+}
